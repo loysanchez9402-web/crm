@@ -18,6 +18,7 @@ import { GoogleModule } from "./google/google.module";
 import { HealthModule } from "./health/health.module";
 import { LoggingModule } from "./logging/logging.module";
 import { logAuthRoute } from "./logging/request-logger.middleware";
+import { PublicModule } from "./public/public.module";
 import { SearchModule } from "./search/search.module";
 import { SettingsModule } from "./settings/settings.module";
 import { SsoModule } from "./sso/sso.module";
@@ -39,6 +40,7 @@ import { WorkspaceModule } from "./workspace/workspace.module";
 		BetterAuthModule.forRoot({ auth, middleware: logAuthRoute }),
 		AuthModule,
 		HealthModule,
+		PublicModule,
 		TrpcModule,
 		UsersModule,
 		CompaniesModule,
