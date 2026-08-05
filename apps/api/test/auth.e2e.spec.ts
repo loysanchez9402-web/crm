@@ -25,12 +25,14 @@ describe("Auth (e2e)", () => {
 
 	beforeAll(async () => {
 		const { AppModule } = await import("../src/app.module");
+		const { createValidationPipe } = await import("../src/create-app");
 
 		const moduleFixture: TestingModule = await Test.createTestingModule({
 			imports: [AppModule],
 		}).compile();
 
 		app = moduleFixture.createNestApplication({ bodyParser: false });
+		app.useGlobalPipes(createValidationPipe());
 		await app.init();
 	});
 

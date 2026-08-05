@@ -18,25 +18,58 @@ fallback("API_URL", "http://localhost:3001");
 fallback("ALLOWED_SIGN_IN", "example.com");
 fallback("GOOGLE_CLIENT_ID", "test-google-client-id");
 fallback("GOOGLE_CLIENT_SECRET", "test-google-client-secret");
-// Replace with a real seeded user id in your local DB before running.
-fallback("WEBSITE_LEAD_OWNER_ID", "usr-jvaf9ztwmi");
+
+const testRunId = process.env.TEST_RUN_ID ?? "public-leads-e2e";
+const websiteLeadOwnerId = `user-${testRunId}`;
 
 describe("Public leads (e2e)", () => {
 	let app: INestApplication;
+	let ownerCreated = false;
 
 	beforeAll(async () => {
+		const { db } = await import("@crm/db");
+
+		try {
+			await db.user.deleteMany({ where: { id: websiteLeadOwnerId } });
+			await db.user.create({
+				data: {
+					id: websiteLeadOwnerId,
+					name: "Public Leads Test Owner",
+					email: `${websiteLeadOwnerId}@example.test`,
+				},
+			});
+			ownerCreated = true;
+		} catch {
+			// No reachable Postgres in this environment -- the app below will fail
+			// to boot for the same reason, which is the same outcome as before this
+			// seeding was added.
+		}
+
+		process.env.WEBSITE_LEAD_OWNER_ID = websiteLeadOwnerId;
+
 		const { AppModule } = await import("../src/app.module");
+		const { createValidationPipe } = await import("../src/create-app");
 
 		const moduleFixture: TestingModule = await Test.createTestingModule({
 			imports: [AppModule],
 		}).compile();
 
 		app = moduleFixture.createNestApplication({ bodyParser: false });
+		app.useGlobalPipes(createValidationPipe());
 		await app.init();
 	});
 
 	afterAll(async () => {
 		await app.close();
+
+		if (ownerCreated) {
+			const { db } = await import("@crm/db");
+			try {
+				await db.user.deleteMany({ where: { id: websiteLeadOwnerId } });
+			} catch {
+				// Best-effort cleanup; nothing to do if the DB is unreachable.
+			}
+		}
 	});
 
 	it("creates a lead with a valid payload and returns 201", async () => {
