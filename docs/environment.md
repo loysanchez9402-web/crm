@@ -2,7 +2,7 @@
 
 ## One `.env`, at the root of the repo
 
-Copy [`.env.example`](../.env.example) to `.env` and fill in the five required
+Copy [`.env.example`](../.env.example) to `.env` and fill in the six required
 values. That file is the documentation — every variable the repo reads is in it,
 with a note on what it does, and nothing that is not read is in it.
 
@@ -46,19 +46,20 @@ frames away as a missing variable. `packages/env/test/root.spec.ts` pins this.
 
 ## What is required
 
-Three values, and the API refuses to start without them.
+Four values, and the API refuses to start without them.
 
 | Variable | Why it has no default |
 | --- | --- |
 | `DATABASE_URL` | `docker compose up -d` starts a Postgres that matches `.env.example` exactly |
 | `BETTER_AUTH_SECRET` | Signs session cookies. `openssl rand -base64 32` |
 | `ALLOWED_SIGN_IN` | The entire authorisation model — see below |
+| `WEBSITE_LEAD_OWNER_ID` | The `User.id` that public website leads (`POST /public/leads` consultation requests) are attributed to as owner/author |
 
 Everything else has a working localhost default or is genuinely optional. That
 is the difference between a clone that runs and a clone that makes you read a
 table of variables first.
 
-### Google is the fourth value, and it is a pair
+### Google is the fifth value, and it is a pair
 
 `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are what a clone starts with, and
 almost every install wants them: they are both the sign-in button and the Gmail
