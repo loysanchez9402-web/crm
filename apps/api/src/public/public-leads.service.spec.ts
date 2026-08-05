@@ -1,3 +1,4 @@
+import { Prisma } from "@crm/db";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { PublicLeadsService } from "./public-leads.service";
 
@@ -56,6 +57,40 @@ describe("PublicLeadsService", () => {
 		const activityArgs = db.activity.create.mock.calls[0][0];
 		expect(activityArgs.data.contactId).toBe("contact-existing");
 		expect(activityArgs.data.body).toBe("Second inquiry.");
+	});
+
+	it("recovers from a concurrent duplicate-email race by reusing the winning contact", async () => {
+		// Simulates two simultaneous submissions for the same email: both pass the
+		// initial findFirst check (no contact exists yet), then this request loses
+		// the race and its create() hits the email @unique constraint (P2002). The
+		// service should re-fetch and reuse the contact the other request created,
+		// rather than propagating the error.
+		let findFirstCalls = 0;
+		db.contact.findFirst = mock(async () => {
+			findFirstCalls += 1;
+			if (findFirstCalls === 1) return null;
+			return { id: "contact-race-winner" };
+		});
+		db.contact.create = mock(async () => {
+			throw new Prisma.PrismaClientKnownRequestError(
+				"Unique constraint failed on the fields: (`email`)",
+				{ code: "P2002", clientVersion: "6.0.0" },
+			);
+		});
+
+		const result = await service.submit({
+			name: "Ada Lovelace",
+			email: "ada@example.com",
+			message: "Concurrent submission.",
+		});
+
+		expect(db.contact.create).toHaveBeenCalledTimes(1);
+		expect(db.contact.findFirst).toHaveBeenCalledTimes(2);
+		expect(result.contactId).toBe("contact-race-winner");
+		expect(db.activity.create).toHaveBeenCalledTimes(1);
+
+		const activityArgs = db.activity.create.mock.calls[0][0];
+		expect(activityArgs.data.contactId).toBe("contact-race-winner");
 	});
 
 	it("splits the submitted name into firstName/lastName on the new contact", async () => {

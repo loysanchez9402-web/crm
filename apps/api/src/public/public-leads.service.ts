@@ -1,4 +1,4 @@
-import type { Db } from "@crm/db";
+import { Prisma as PrismaNamespace, type Db } from "@crm/db";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectDatabase } from "../database/database.constants";
 import type { CreateLeadDto } from "./dto/create-lead.dto";
@@ -39,15 +39,36 @@ export class PublicLeadsService {
 			contactId = existing.id;
 		} else {
 			const { firstName, lastName } = splitName(input.name);
-			const created = await this.db.contact.create({
-				data: {
-					firstName,
-					lastName,
-					email,
-					ownerId: this.ownerId,
-				},
-			});
-			contactId = created.id;
+			try {
+				const created = await this.db.contact.create({
+					data: {
+						firstName,
+						lastName,
+						email,
+						ownerId: this.ownerId,
+					},
+				});
+				contactId = created.id;
+			} catch (error) {
+				if (
+					error instanceof PrismaNamespace.PrismaClientKnownRequestError &&
+					error.code === "P2002"
+				) {
+					// Two concurrent submissions raced past the findFirst check above;
+					// the email's unique constraint means another request just created
+					// this contact. Re-fetch and reuse it instead of failing the request.
+					const raceWinner = await this.db.contact.findFirst({
+						where: { email: { equals: email, mode: "insensitive" } },
+						select: { id: true },
+					});
+					if (!raceWinner) {
+						throw error;
+					}
+					contactId = raceWinner.id;
+				} else {
+					throw error;
+				}
+			}
 		}
 
 		const subject = input.sourceUrl
