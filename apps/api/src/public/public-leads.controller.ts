@@ -1,5 +1,5 @@
-import { Body, Controller, HttpCode, Post } from "@nestjs/common";
-import { Throttle } from "@nestjs/throttler";
+import { Body, Controller, HttpCode, Post, UseGuards } from "@nestjs/common";
+import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
 import { CreateLeadDto } from "./dto/create-lead.dto";
 import { PublicLeadsService } from "./public-leads.service";
@@ -11,6 +11,7 @@ export class PublicLeadsController {
 	@Post()
 	@HttpCode(201)
 	@AllowAnonymous()
+	@UseGuards(ThrottlerGuard)
 	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	async create(@Body() body: CreateLeadDto) {
 		const result = await this.leads.submit(body);
