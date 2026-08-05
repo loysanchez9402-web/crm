@@ -48,6 +48,13 @@ export class EnvironmentVariables {
 	})
 	ALLOWED_SIGN_IN!: string;
 
+	@IsString()
+	@MinLength(1, {
+		message:
+			"WEBSITE_LEAD_OWNER_ID is required. Set it to the User.id that public website leads should be attributed to.",
+	})
+	WEBSITE_LEAD_OWNER_ID!: string;
+
 	@IsOptional()
 	@IsString()
 	GOOGLE_CLIENT_ID?: string;
