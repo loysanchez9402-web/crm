@@ -56,6 +56,10 @@ export class EnvironmentVariables {
 	WEBSITE_LEAD_OWNER_ID!: string;
 
 	@IsOptional()
+	@IsUrl({ require_tld: false })
+	WEBSITE_ORIGIN?: string;
+
+	@IsOptional()
 	@IsString()
 	GOOGLE_CLIENT_ID?: string;
 
