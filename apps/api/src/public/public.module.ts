@@ -3,7 +3,8 @@ import {
 	Module,
 	type NestModule,
 } from "@nestjs/common";
-import { ThrottlerModule } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { json } from "express";
 import { PublicLeadsController } from "./public-leads.controller";
 import {
@@ -31,6 +32,10 @@ import {
 				}
 				return id;
 			},
+		},
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard,
 		},
 	],
 })
