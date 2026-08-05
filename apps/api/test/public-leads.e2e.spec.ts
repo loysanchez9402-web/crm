@@ -86,9 +86,7 @@ describe("Public leads (e2e)", () => {
 			})
 			.expect(201);
 
-		expect(response.body.status).toBe("ok");
-		expect(typeof response.body.contactId).toBe("string");
-		expect(typeof response.body.activityId).toBe("string");
+		expect(response.body).toEqual({ status: "ok" });
 	});
 
 	it("rejects a payload with no message", async () => {

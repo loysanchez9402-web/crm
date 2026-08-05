@@ -14,7 +14,12 @@ export class PublicLeadsController {
 	@UseGuards(ThrottlerGuard)
 	@Throttle({ default: { limit: 5, ttl: 60_000 } })
 	async create(@Body() body: CreateLeadDto) {
-		const result = await this.leads.submit(body);
-		return { status: "ok", ...result };
+		// PublicLeadsService.submit() returns { contactId, activityId }, useful
+		// internally and for tests, but an anonymous caller has no legitimate use
+		// for internal CRM record ids -- and Contact.id leaks creation-time-
+		// adjacent information about whether an email was already a known
+		// contact. Don't forward it.
+		await this.leads.submit(body);
+		return { status: "ok" };
 	}
 }
