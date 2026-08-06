@@ -74,7 +74,7 @@ describe("DealsService.update", () => {
 		await service.update("deal-1", { currency: "EUR" });
 
 		expect(conversion.dealFields).toHaveBeenCalledTimes(1);
-		const call = conversion.dealFields.mock.calls[0]!;
-		expect(call[2]).toBe(db.tx);
+		const call = conversion.dealFields.mock.calls[0];
+		expect(call?.[2]).toBe(db.tx);
 	});
 });

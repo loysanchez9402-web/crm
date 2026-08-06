@@ -1,5 +1,5 @@
+import { describe, expect, it, mock } from "bun:test";
 import type { Db, MailboxSyncModel as MailboxSync } from "@crm/db";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { ActivityStampService } from "../crm/activity-stamp.service";
 import type { GmailMessage } from "./gmail.client";
 import { GmailSyncService } from "./gmail-sync.service";
@@ -89,7 +89,9 @@ function callStore(
 
 describe("GmailSyncService.store", () => {
 	it("recomputes the thread rollup with a single atomic UPDATE, using its RETURNING lastMessageAt", async () => {
-		const db = fakeDb([{ firstMessageAt: new Date(0), lastMessageAt: SENT_AT }]);
+		const db = fakeDb([
+			{ firstMessageAt: new Date(0), lastMessageAt: SENT_AT },
+		]);
 		const stamp = { touch: mock(async (..._args: unknown[]) => undefined) };
 		const service = new GmailSyncService(
 			db as unknown as Db,
@@ -110,7 +112,7 @@ describe("GmailSyncService.store", () => {
 
 		expect(wrote).toBe(true);
 		expect(db.$queryRaw).toHaveBeenCalledTimes(1);
-		const activityArgs = db.activity.upsert.mock.calls[0]![0] as {
+		const activityArgs = db.activity.upsert.mock.calls[0]?.[0] as {
 			create: { occurredAt: Date };
 		};
 		expect(activityArgs.create.occurredAt).toEqual(SENT_AT);
@@ -136,7 +138,7 @@ describe("GmailSyncService.store", () => {
 			fakeContext(),
 		);
 
-		const activityArgs = db.activity.upsert.mock.calls[0]![0] as {
+		const activityArgs = db.activity.upsert.mock.calls[0]?.[0] as {
 			create: { occurredAt: Date };
 		};
 		expect(activityArgs.create.occurredAt).toEqual(SENT_AT);

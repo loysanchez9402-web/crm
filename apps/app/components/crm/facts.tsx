@@ -17,9 +17,10 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
 	year: "numeric",
 });
 
-export function factsByField(
-	facts: Fact[],
-): { applied: Map<string, Fact>; proposed: Map<string, Fact> } {
+export function factsByField(facts: Fact[]): {
+	applied: Map<string, Fact>;
+	proposed: Map<string, Fact>;
+} {
 	const applied = new Map<string, Fact>();
 	const proposed = new Map<string, Fact>();
 
