@@ -329,25 +329,30 @@ export class GmailSyncService {
 			},
 		});
 
-		const stats = await this.db.emailMessage.aggregate({
-			where: { threadId: record.id },
-			_count: { _all: true },
-			_min: { sentAt: true },
-			_max: { sentAt: true },
-		});
+		// Recompute and write the thread's rollup fields in one atomic statement
+		// (rather than aggregate-then-update as two round trips) so two Gmail
+		// syncs racing on the same thread can't overwrite each other's count.
+		const [updated] = await this.db.$queryRaw<
+			Array<{ firstMessageAt: Date; lastMessageAt: Date }>
+		>`
+			UPDATE "emailThread"
+			SET
+				"messageCount" = sub.count,
+				"firstMessageAt" = sub.first,
+				"lastMessageAt" = sub.last,
+				"subject" = CASE
+					WHEN ${parsed.sentAt} <= sub.first THEN ${parsed.subject}
+					ELSE "subject"
+				END
+			FROM (
+				SELECT COUNT(*)::int AS count, MIN("sentAt") AS first, MAX("sentAt") AS last
+				FROM "emailMessage" WHERE "threadId" = ${record.id}
+			) sub
+			WHERE "emailThread".id = ${record.id}
+			RETURNING "firstMessageAt", "lastMessageAt"
+		`;
 
-		const firstMessageAt = stats._min.sentAt ?? parsed.sentAt;
-		const lastMessageAt = stats._max.sentAt ?? parsed.sentAt;
-
-		await this.db.emailThread.update({
-			where: { id: record.id },
-			data: {
-				messageCount: stats._count._all,
-				firstMessageAt,
-				lastMessageAt,
-				...(parsed.sentAt <= firstMessageAt ? { subject: parsed.subject } : {}),
-			},
-		});
+		const lastMessageAt = updated?.lastMessageAt ?? parsed.sentAt;
 
 		await this.project(record.id, row.userId, {
 			subject: parsed.subject ?? "(no subject)",
