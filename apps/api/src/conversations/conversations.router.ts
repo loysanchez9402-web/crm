@@ -16,7 +16,10 @@ import {
 	conversationListInput,
 	conversationSaveInput,
 } from "./conversations.contracts";
-import { ConversationsService } from "./conversations.service";
+import {
+	ConversationsService,
+	type ConversationEvent,
+} from "./conversations.service";
 
 @Router({ alias: "conversations" })
 @UseMiddlewares(AuthMiddleware)
@@ -38,7 +41,7 @@ export class ConversationsRouter {
 	async events(
 		@Ctx() ctx: AuthedTrpcContext,
 		@Input() input: z.infer<typeof conversationEventsInput>,
-	) {
+	): Promise<ConversationEvent[]> {
 		return this.conversations.events(input, ctx.user.id);
 	}
 

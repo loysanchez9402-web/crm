@@ -1,4 +1,4 @@
-import type { Db } from "@crm/db";
+import type { Db, Prisma } from "@crm/db";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import {
 	BadRequestException,
@@ -23,6 +23,12 @@ export interface ConversationSummary {
 	title: string | null;
 	messageCount: number;
 	lastMessageAt: string;
+}
+
+export interface ConversationEvent {
+	type: string;
+	data: Prisma.JsonValue;
+	meta: { id: string; at: string };
 }
 
 const LIST_TTL_MS = 10 * 60_000;
@@ -120,7 +126,10 @@ export class ConversationsService {
 		return { id: conversation.id };
 	}
 
-	async events(input: ConversationEventsInput, userId: string) {
+	async events(
+		input: ConversationEventsInput,
+		userId: string,
+	): Promise<ConversationEvent[]> {
 		const conversation = await this.db.agentConversation.findUnique({
 			where: { id: input.id },
 			select: { sessionId: true, userId: true },
