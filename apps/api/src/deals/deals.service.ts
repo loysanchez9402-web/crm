@@ -281,33 +281,47 @@ export class DealsService {
 			data.expectedCloseDate = parseDate(input.expectedCloseDate);
 		}
 
-		if (input.amountCents !== undefined || input.currency !== undefined) {
-			const current = await this.db.deal.findUnique({
-				where: { id },
-				select: { amount: true, currency: true },
-			});
-
-			if (!current) {
-				throw new NotFoundException(`No deal with id ${id}.`);
-			}
-
-			const amount =
-				input.amountCents !== undefined
-					? decimalFromCents(input.amountCents)
-					: current.amount;
-			const currency =
-				input.currency !== undefined
-					? normalizeCurrency(input.currency)
-					: normalizeCurrency(current.currency);
-
-			Object.assign(data, await this.conversion.dealFields(amount, currency));
-		}
+		const mutatesMoney =
+			input.amountCents !== undefined || input.currency !== undefined;
 
 		try {
-			return await this.db.deal.update({
-				where: { id },
-				data,
-				select: { id: true, name: true },
+			if (!mutatesMoney) {
+				return await this.db.deal.update({
+					where: { id },
+					data,
+					select: { id: true, name: true },
+				});
+			}
+
+			// amount/currency changed: lock the row for the whole read-compute-write
+			// so a concurrent edit to the same deal's money fields can't read the
+			// same stale amount/currency we did and produce a baseAmount/fxRate
+			// that doesn't match whichever of the two writes lands last.
+			return await this.db.$transaction(async (tx) => {
+				const [current] = await tx.$queryRaw<
+					Array<{ amount: Prisma.Decimal; currency: string }>
+				>`SELECT "amount", "currency" FROM "deal" WHERE id = ${id} FOR UPDATE`;
+
+				if (!current) {
+					throw new NotFoundException(`No deal with id ${id}.`);
+				}
+
+				const amount =
+					input.amountCents !== undefined
+						? decimalFromCents(input.amountCents)
+						: current.amount;
+				const currency =
+					input.currency !== undefined
+						? normalizeCurrency(input.currency)
+						: normalizeCurrency(current.currency);
+
+				Object.assign(data, await this.conversion.dealFields(amount, currency));
+
+				return tx.deal.update({
+					where: { id },
+					data,
+					select: { id: true, name: true },
+				});
 			});
 		} catch (error) {
 			throw this.translate(error, id);
