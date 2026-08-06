@@ -299,7 +299,7 @@ export class DealsService {
 			// that doesn't match whichever of the two writes lands last.
 			return await this.db.$transaction(async (tx) => {
 				const [current] = await tx.$queryRaw<
-					Array<{ amount: Prisma.Decimal; currency: string }>
+					Array<{ amount: Prisma.Decimal | null; currency: string }>
 				>`SELECT "amount", "currency" FROM "deal" WHERE id = ${id} FOR UPDATE`;
 
 				if (!current) {
