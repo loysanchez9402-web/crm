@@ -17,6 +17,7 @@
 		"clean": "rm -rf .turbo .eve node_modules"
 	},
 	"dependencies": {
+		"@anthropic-ai/sdk": "^0.115.0",
 		"@crm/db": "workspace:*",
 		"@crm/env": "workspace:*",
 		"@crm/telemetry": "workspace:*",
