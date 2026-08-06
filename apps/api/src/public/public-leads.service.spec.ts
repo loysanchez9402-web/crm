@@ -1,10 +1,15 @@
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Db } from "@crm/db";
 import { Prisma } from "@crm/db";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { PublicLeadsService } from "./public-leads.service";
 
 type ContactCreateInput = {
-	data: { firstName: string; lastName?: string; email: string; ownerId: string };
+	data: {
+		firstName: string;
+		lastName?: string;
+		email: string;
+		ownerId: string;
+	};
 };
 type ActivityCreateInput = {
 	data: { contactId: string; body: string };
@@ -42,11 +47,14 @@ describe("PublicLeadsService", () => {
 
 		expect(db.contact.create).toHaveBeenCalledTimes(1);
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
-		expect(result).toEqual({ contactId: "contact-1", activityId: "activity-1" });
+		expect(result).toEqual({
+			contactId: "contact-1",
+			activityId: "activity-1",
+		});
 
-		const createArgs = db.contact.create.mock.calls[0]![0];
-		expect(createArgs.data.email).toBe("ada@example.com");
-		expect(createArgs.data.ownerId).toBe(ownerId);
+		const createArgs = db.contact.create.mock.calls[0]?.[0];
+		expect(createArgs?.data.email).toBe("ada@example.com");
+		expect(createArgs?.data.ownerId).toBe(ownerId);
 	});
 
 	it("reuses an existing contact and only adds a new activity", async () => {
@@ -62,9 +70,9 @@ describe("PublicLeadsService", () => {
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
 		expect(result.contactId).toBe("contact-existing");
 
-		const activityArgs = db.activity.create.mock.calls[0]![0];
-		expect(activityArgs.data.contactId).toBe("contact-existing");
-		expect(activityArgs.data.body).toBe("Second inquiry.");
+		const activityArgs = db.activity.create.mock.calls[0]?.[0];
+		expect(activityArgs?.data.contactId).toBe("contact-existing");
+		expect(activityArgs?.data.body).toBe("Second inquiry.");
 	});
 
 	it("recovers from a concurrent duplicate-email race by reusing the winning contact", async () => {
@@ -97,8 +105,8 @@ describe("PublicLeadsService", () => {
 		expect(result.contactId).toBe("contact-race-winner");
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
 
-		const activityArgs = db.activity.create.mock.calls[0]![0];
-		expect(activityArgs.data.contactId).toBe("contact-race-winner");
+		const activityArgs = db.activity.create.mock.calls[0]?.[0];
+		expect(activityArgs?.data.contactId).toBe("contact-race-winner");
 	});
 
 	it("splits the submitted name into firstName/lastName on the new contact", async () => {
@@ -108,8 +116,8 @@ describe("PublicLeadsService", () => {
 			message: "Hi",
 		});
 
-		const createArgs = db.contact.create.mock.calls[0]![0];
-		expect(createArgs.data.firstName).toBe("Ada");
-		expect(createArgs.data.lastName).toBe("Lovelace");
+		const createArgs = db.contact.create.mock.calls[0]?.[0];
+		expect(createArgs?.data.firstName).toBe("Ada");
+		expect(createArgs?.data.lastName).toBe("Lovelace");
 	});
 });
