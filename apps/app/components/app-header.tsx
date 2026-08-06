@@ -18,20 +18,37 @@ import {
 } from "@crm/ui/components/dropdown-menu";
 import Logo from "@crm/ui/components/logo";
 import { Separator } from "@crm/ui/components/separator";
+import { Skeleton } from "@crm/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useMobileNav } from "@/components/mobile-nav";
 import { useTRPC } from "@/lib/trpc/client";
+import { useWorkspaceUrl } from "@/lib/use-workspace-url";
 
 type User = { name: string; email: string; image: string | null };
+
+/**
+ * The workspace arrives named `CRM` until somebody types something else — the
+ * deliberate placeholder — so appending the product name to it read "CRM CRM".
+ * A workspace genuinely called "Acme CRM" has the same problem, which is why
+ * this tests the name rather than comparing it to the default.
+ */
+export function workspaceLabel(name: string | undefined): string {
+	const trimmed = name?.trim();
+
+	if (!trimmed) return "CRM";
+
+	return /\bcrm$/i.test(trimmed) ? trimmed : `${trimmed} CRM`;
+}
 
 export function AppHeader({ user }: { user: User }) {
 	const { setOpen: setMobileNavOpen } = useMobileNav();
 	const trpc = useTRPC();
+	const workspaceUrl = useWorkspaceUrl();
 	const workspace = useQuery(trpc.workspace.get.queryOptions());
-	const name = workspace.data?.name;
+	const label = workspaceLabel(workspace.data?.name);
 
 	async function handleSignOut() {
 		const { error } = await signOut();
@@ -57,16 +74,14 @@ export function AppHeader({ user }: { user: User }) {
 					<Menu />
 				</Button>
 				<Link
-					href="/"
+					href={workspaceUrl()}
 					aria-label="Homepage"
 					className="hidden size-8 items-center justify-center text-foreground md:flex"
 				>
 					<Logo className="size-5" />
 				</Link>
 				<Separator orientation="vertical" className="mx-1 h-5 bg-transparent" />
-				<span className="min-w-0 truncate font-medium text-sm">
-					{name ? `${name} CRM` : "CRM"}
-				</span>
+				<span className="min-w-0 truncate font-medium text-sm">{label}</span>
 			</div>
 
 			<div className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -76,6 +91,26 @@ export function AppHeader({ user }: { user: User }) {
 						handleSignOut().catch(() => toast.error("Could not sign out."));
 					}}
 				/>
+			</div>
+		</header>
+	);
+}
+
+export function AppHeaderFallback() {
+	return (
+		<header className="flex h-12 shrink-0 items-center gap-2 border-b px-3 [view-transition-name:app-header]">
+			<div className="flex shrink-0 items-center gap-1">
+				<span className="hidden size-8 items-center justify-center text-foreground md:flex">
+					<Logo className="size-5" />
+				</span>
+				<Separator orientation="vertical" className="mx-1 h-5 bg-transparent" />
+				<Skeleton className="h-4 w-24" />
+			</div>
+
+			<div className="ml-auto flex shrink-0 items-center gap-1.5">
+				<Avatar className="size-7">
+					<AvatarFallback />
+				</Avatar>
 			</div>
 		</header>
 	);

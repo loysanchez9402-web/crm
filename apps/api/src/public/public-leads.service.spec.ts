@@ -1,16 +1,24 @@
+import type { Db } from "@crm/db";
 import { Prisma } from "@crm/db";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { PublicLeadsService } from "./public-leads.service";
 
+type ContactCreateInput = {
+	data: { firstName: string; lastName?: string; email: string; ownerId: string };
+};
+type ActivityCreateInput = {
+	data: { contactId: string; body: string };
+};
+
 function fakeDb() {
 	const contact = {
-		findFirst: mock(async () => null as { id: string } | null),
-		create: mock(async () => ({ id: "contact-1" })),
+		findFirst: mock(async (_args: unknown) => null as { id: string } | null),
+		create: mock(async (_args: ContactCreateInput) => ({ id: "contact-1" })),
 	};
 	const activity = {
-		create: mock(async () => ({ id: "activity-1" })),
+		create: mock(async (_args: ActivityCreateInput) => ({ id: "activity-1" })),
 	};
-	return { contact, activity } as unknown as import("@crm/db").Db;
+	return { contact, activity };
 }
 
 describe("PublicLeadsService", () => {
@@ -20,7 +28,7 @@ describe("PublicLeadsService", () => {
 
 	beforeEach(() => {
 		db = fakeDb();
-		service = new PublicLeadsService(db, ownerId);
+		service = new PublicLeadsService(db as unknown as Db, ownerId);
 	});
 
 	it("creates a new contact and a NOTE activity when no contact exists for the email", async () => {
@@ -36,7 +44,7 @@ describe("PublicLeadsService", () => {
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
 		expect(result).toEqual({ contactId: "contact-1", activityId: "activity-1" });
 
-		const createArgs = db.contact.create.mock.calls[0][0];
+		const createArgs = db.contact.create.mock.calls[0]![0];
 		expect(createArgs.data.email).toBe("ada@example.com");
 		expect(createArgs.data.ownerId).toBe(ownerId);
 	});
@@ -54,7 +62,7 @@ describe("PublicLeadsService", () => {
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
 		expect(result.contactId).toBe("contact-existing");
 
-		const activityArgs = db.activity.create.mock.calls[0][0];
+		const activityArgs = db.activity.create.mock.calls[0]![0];
 		expect(activityArgs.data.contactId).toBe("contact-existing");
 		expect(activityArgs.data.body).toBe("Second inquiry.");
 	});
@@ -89,7 +97,7 @@ describe("PublicLeadsService", () => {
 		expect(result.contactId).toBe("contact-race-winner");
 		expect(db.activity.create).toHaveBeenCalledTimes(1);
 
-		const activityArgs = db.activity.create.mock.calls[0][0];
+		const activityArgs = db.activity.create.mock.calls[0]![0];
 		expect(activityArgs.data.contactId).toBe("contact-race-winner");
 	});
 
@@ -100,7 +108,7 @@ describe("PublicLeadsService", () => {
 			message: "Hi",
 		});
 
-		const createArgs = db.contact.create.mock.calls[0][0];
+		const createArgs = db.contact.create.mock.calls[0]![0];
 		expect(createArgs.data.firstName).toBe("Ada");
 		expect(createArgs.data.lastName).toBe("Lovelace");
 	});
