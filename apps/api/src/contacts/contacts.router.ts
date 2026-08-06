@@ -1,15 +1,7 @@
 import { Inject } from "@nestjs/common";
-import {
-	Ctx,
-	Input,
-	Mutation,
-	Query,
-	Router,
-	UseMiddlewares,
-} from "nestjs-trpc";
+import { Ctx, Input, Mutation, Query, Router } from "nestjs-trpc";
 import type { z } from "zod";
 import type { AuthedTrpcContext } from "../trpc/context.types";
-import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import {
 	contactCreateInput,
 	contactIdInput,
@@ -20,7 +12,6 @@ import {
 import { ContactsService } from "./contacts.service";
 
 @Router({ alias: "contacts" })
-@UseMiddlewares(AuthMiddleware)
 export class ContactsRouter {
 	constructor(
 		@Inject(ContactsService) private readonly contacts: ContactsService,

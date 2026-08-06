@@ -1,15 +1,7 @@
 import { Inject } from "@nestjs/common";
-import {
-	Ctx,
-	Input,
-	Mutation,
-	Query,
-	Router,
-	UseMiddlewares,
-} from "nestjs-trpc";
+import { Ctx, Input, Mutation, Query, Router } from "nestjs-trpc";
 import type { z } from "zod";
 import type { AuthedTrpcContext } from "../trpc/context.types";
-import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import { ConversationService } from "./conversation.service";
 import {
 	calendarEventInput,
@@ -21,7 +13,6 @@ import { GoogleConnectionService } from "./google-connection.service";
 import { GoogleSyncService } from "./google-sync.service";
 
 @Router({ alias: "google" })
-@UseMiddlewares(AuthMiddleware)
 export class GoogleRouter {
 	constructor(
 		@Inject(GoogleConnectionService)

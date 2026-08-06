@@ -1,16 +1,8 @@
 import { Inject } from "@nestjs/common";
 import { fromNodeHeaders } from "better-auth/node";
-import {
-	Ctx,
-	Input,
-	Mutation,
-	Query,
-	Router,
-	UseMiddlewares,
-} from "nestjs-trpc";
+import { Ctx, Input, Mutation, Query, Router } from "nestjs-trpc";
 import type { z } from "zod";
 import type { AuthedTrpcContext, BaseTrpcContext } from "../trpc/context.types";
-import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import {
 	deleteSsoProviderInput,
 	registerSsoProviderInput,
@@ -32,19 +24,16 @@ export class SsoRouter {
 	}
 
 	@Query()
-	@UseMiddlewares(AuthMiddleware)
 	async settings(@Ctx() ctx: AuthedTrpcContext) {
 		return this.sso.settings(ctx.user.id);
 	}
 
 	@Query({ input: ssoProviderListInput })
-	@UseMiddlewares(AuthMiddleware)
 	async list(@Input() input: z.infer<typeof ssoProviderListInput>) {
 		return this.sso.list(input);
 	}
 
 	@Mutation({ input: registerSsoProviderInput })
-	@UseMiddlewares(AuthMiddleware)
 	async register(
 		@Ctx() ctx: AuthedTrpcContext,
 		@Input() input: z.infer<typeof registerSsoProviderInput>,
@@ -53,7 +42,6 @@ export class SsoRouter {
 	}
 
 	@Mutation({ input: deleteSsoProviderInput })
-	@UseMiddlewares(AuthMiddleware)
 	async remove(
 		@Ctx() ctx: AuthedTrpcContext,
 		@Input() input: z.infer<typeof deleteSsoProviderInput>,
