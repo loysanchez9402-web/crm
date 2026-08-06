@@ -30,6 +30,14 @@ describe("Public leads (e2e)", () => {
 		const { db } = await import("@crm/db");
 
 		try {
+			// Delete dependents before the user row -- a previous run that crashed
+			// before its own cleanup ran (see afterAll) can leave Activity/Contact
+			// rows pointing at this same id, and Activity.createdById is RESTRICT,
+			// so deleting the user alone would throw here too.
+			await db.activity.deleteMany({
+				where: { createdById: websiteLeadOwnerId },
+			});
+			await db.contact.deleteMany({ where: { ownerId: websiteLeadOwnerId } });
 			await db.user.deleteMany({ where: { id: websiteLeadOwnerId } });
 			await db.user.create({
 				data: {
@@ -60,11 +68,25 @@ describe("Public leads (e2e)", () => {
 	});
 
 	afterAll(async () => {
-		await app.close();
+		if (app) {
+			await app.close();
+		}
 
 		if (ownerCreated) {
 			const { db } = await import("@crm/db");
 			try {
+				// Delete dependents before the owner row: Activity.createdById has no
+				// onDelete override, so it's RESTRICT by default, and deleting the
+				// user first (as this cleanup originally did) throws a foreign-key
+				// violation on every run that actually creates a lead -- silently,
+				// since it lands in the catch below, leaving the user, its
+				// contacts and its activities all behind instead of cleaned up.
+				await db.activity.deleteMany({
+					where: { createdById: websiteLeadOwnerId },
+				});
+				await db.contact.deleteMany({
+					where: { ownerId: websiteLeadOwnerId },
+				});
 				await db.user.deleteMany({ where: { id: websiteLeadOwnerId } });
 			} catch {
 				// Best-effort cleanup; nothing to do if the DB is unreachable.
