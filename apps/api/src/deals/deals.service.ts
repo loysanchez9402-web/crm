@@ -293,10 +293,6 @@ export class DealsService {
 				});
 			}
 
-			// amount/currency changed: lock the row for the whole read-compute-write
-			// so a concurrent edit to the same deal's money fields can't read the
-			// same stale amount/currency we did and produce a baseAmount/fxRate
-			// that doesn't match whichever of the two writes lands last.
 			return await this.db.$transaction(async (tx) => {
 				const [current] = await tx.$queryRaw<
 					Array<{ amount: Prisma.Decimal | null; currency: string }>
@@ -315,7 +311,10 @@ export class DealsService {
 						? normalizeCurrency(input.currency)
 						: normalizeCurrency(current.currency);
 
-				Object.assign(data, await this.conversion.dealFields(amount, currency));
+				Object.assign(
+					data,
+					await this.conversion.dealFields(amount, currency, tx),
+				);
 
 				return tx.deal.update({
 					where: { id },

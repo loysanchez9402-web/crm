@@ -329,9 +329,6 @@ export class GmailSyncService {
 			},
 		});
 
-		// Recompute and write the thread's rollup fields in one atomic statement
-		// (rather than aggregate-then-update as two round trips) so two Gmail
-		// syncs racing on the same thread can't overwrite each other's count.
 		const [updated] = await this.db.$queryRaw<
 			Array<{ firstMessageAt: Date; lastMessageAt: Date }>
 		>`

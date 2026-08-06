@@ -1,4 +1,3 @@
-import type { Db } from "./client";
 import { minorUnitsOf, normalizeCurrency } from "./currency";
 import { Prisma } from "./generated/prisma/client";
 import { RateSource } from "./generated/prisma/enums";
@@ -23,7 +22,7 @@ export interface Conversion {
 export const ONE = new Prisma.Decimal(1);
 
 export async function resolveRate(
-	db: Db,
+	db: Prisma.TransactionClient,
 	base: string,
 	quote: string,
 	now: Date = new Date(),
@@ -75,7 +74,7 @@ export function applyRate(
 }
 
 export async function convertToBase(
-	db: Db,
+	db: Prisma.TransactionClient,
 	amount: Prisma.Decimal | null,
 	from: string,
 	base: string,

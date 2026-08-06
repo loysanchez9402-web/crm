@@ -13,12 +13,6 @@ import {
 	type ValidationOptions,
 } from "class-validator";
 
-/**
- * APP_URL is a comma-separated list fed straight into Better Auth's
- * trustedOrigins (with credentials: true), so it must reject anything that
- * isn't a real http(s) origin — a bare `@IsString()` would silently accept
- * "*" or other wildcard/garbage values.
- */
 function IsCommaSeparatedUrls(validationOptions?: ValidationOptions) {
 	return (object: object, propertyName: string) => {
 		registerDecorator({
