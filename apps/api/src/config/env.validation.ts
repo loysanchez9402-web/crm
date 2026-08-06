@@ -9,8 +9,8 @@ import {
 	Min,
 	MinLength,
 	registerDecorator,
-	validateSync,
 	type ValidationOptions,
+	validateSync,
 } from "class-validator";
 
 function IsCommaSeparatedUrls(validationOptions?: ValidationOptions) {
@@ -22,7 +22,8 @@ function IsCommaSeparatedUrls(validationOptions?: ValidationOptions) {
 			options: validationOptions,
 			validator: {
 				validate(value: unknown) {
-					if (typeof value !== "string" || value.trim().length === 0) return false;
+					if (typeof value !== "string" || value.trim().length === 0)
+						return false;
 					const origins = value
 						.split(",")
 						.map((origin) => origin.trim())
@@ -38,7 +39,7 @@ function IsCommaSeparatedUrls(validationOptions?: ValidationOptions) {
 					});
 				},
 				defaultMessage() {
-					return "APP_URL must be a comma-separated list of http(s) URLs (e.g. \"http://localhost:3000\")";
+					return 'APP_URL must be a comma-separated list of http(s) URLs (e.g. "http://localhost:3000")';
 				},
 			},
 		});

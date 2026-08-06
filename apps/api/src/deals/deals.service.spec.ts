@@ -1,5 +1,5 @@
-import type { Db } from "@crm/db";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import type { Db } from "@crm/db";
 import type { ActivityStampService } from "../crm/activity-stamp.service";
 import type { ConversionService } from "../currency/conversion.service";
 import { DealsService } from "./deals.service";
@@ -13,8 +13,8 @@ function fakeDb() {
 		{ amount: null, currency: "USD" },
 	]);
 	const tx = { deal: { update: txDealUpdate }, $queryRaw: queryRaw };
-	const transaction = mock(
-		async (callback: (client: typeof tx) => unknown) => callback(tx),
+	const transaction = mock(async (callback: (client: typeof tx) => unknown) =>
+		callback(tx),
 	);
 	const dealUpdate = mock(async (_args: unknown) => ({
 		id: "deal-1",
