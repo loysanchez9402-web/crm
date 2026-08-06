@@ -8,8 +8,42 @@ import {
 	Max,
 	Min,
 	MinLength,
+	registerDecorator,
 	validateSync,
+	type ValidationOptions,
 } from "class-validator";
+
+function IsCommaSeparatedUrls(validationOptions?: ValidationOptions) {
+	return (object: object, propertyName: string) => {
+		registerDecorator({
+			name: "isCommaSeparatedUrls",
+			target: object.constructor,
+			propertyName,
+			options: validationOptions,
+			validator: {
+				validate(value: unknown) {
+					if (typeof value !== "string" || value.trim().length === 0) return false;
+					const origins = value
+						.split(",")
+						.map((origin) => origin.trim())
+						.filter(Boolean);
+					if (origins.length === 0) return false;
+					return origins.every((origin) => {
+						try {
+							const url = new URL(origin);
+							return url.protocol === "http:" || url.protocol === "https:";
+						} catch {
+							return false;
+						}
+					});
+				},
+				defaultMessage() {
+					return "APP_URL must be a comma-separated list of http(s) URLs (e.g. \"http://localhost:3000\")";
+				},
+			},
+		});
+	};
+}
 
 export enum NodeEnv {
 	Development = "development",
@@ -72,7 +106,7 @@ export class EnvironmentVariables {
 	API_URL?: string;
 
 	@IsOptional()
-	@IsString()
+	@IsCommaSeparatedUrls()
 	APP_URL?: string;
 
 	@IsOptional()

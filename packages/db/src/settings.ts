@@ -4,6 +4,7 @@ import {
 	isCurrencyCode,
 	normalizeCurrency,
 } from "./currency";
+import type { Prisma } from "./generated/prisma/client";
 
 export const SETTINGS_ID = "app";
 
@@ -75,7 +76,9 @@ export async function writeContextDevKey(db: Db, key: string): Promise<void> {
 	});
 }
 
-export async function readReportingCurrency(db: Db): Promise<string> {
+export async function readReportingCurrency(
+	db: Prisma.TransactionClient,
+): Promise<string> {
 	const row = await db.appSetting.findUnique({
 		where: { id: SETTINGS_ID },
 		select: { reportingCurrency: true },

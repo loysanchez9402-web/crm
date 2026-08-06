@@ -281,33 +281,46 @@ export class DealsService {
 			data.expectedCloseDate = parseDate(input.expectedCloseDate);
 		}
 
-		if (input.amountCents !== undefined || input.currency !== undefined) {
-			const current = await this.db.deal.findUnique({
-				where: { id },
-				select: { amount: true, currency: true },
-			});
-
-			if (!current) {
-				throw new NotFoundException(`No deal with id ${id}.`);
-			}
-
-			const amount =
-				input.amountCents !== undefined
-					? decimalFromCents(input.amountCents)
-					: current.amount;
-			const currency =
-				input.currency !== undefined
-					? normalizeCurrency(input.currency)
-					: normalizeCurrency(current.currency);
-
-			Object.assign(data, await this.conversion.dealFields(amount, currency));
-		}
+		const mutatesMoney =
+			input.amountCents !== undefined || input.currency !== undefined;
 
 		try {
-			return await this.db.deal.update({
-				where: { id },
-				data,
-				select: { id: true, name: true },
+			if (!mutatesMoney) {
+				return await this.db.deal.update({
+					where: { id },
+					data,
+					select: { id: true, name: true },
+				});
+			}
+
+			return await this.db.$transaction(async (tx) => {
+				const [current] = await tx.$queryRaw<
+					Array<{ amount: Prisma.Decimal | null; currency: string }>
+				>`SELECT "amount", "currency" FROM "deal" WHERE id = ${id} FOR UPDATE`;
+
+				if (!current) {
+					throw new NotFoundException(`No deal with id ${id}.`);
+				}
+
+				const amount =
+					input.amountCents !== undefined
+						? decimalFromCents(input.amountCents)
+						: current.amount;
+				const currency =
+					input.currency !== undefined
+						? normalizeCurrency(input.currency)
+						: normalizeCurrency(current.currency);
+
+				Object.assign(
+					data,
+					await this.conversion.dealFields(amount, currency, tx),
+				);
+
+				return tx.deal.update({
+					where: { id },
+					data,
+					select: { id: true, name: true },
+				});
 			});
 		} catch (error) {
 			throw this.translate(error, id);

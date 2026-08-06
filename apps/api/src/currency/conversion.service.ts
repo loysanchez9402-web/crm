@@ -35,8 +35,10 @@ export class ConversionService {
 
 	constructor(@InjectDatabase() private readonly db: Db) {}
 
-	async reportingCurrency(): Promise<string> {
-		return readReportingCurrency(this.db);
+	async reportingCurrency(
+		client: PrismaTypes.TransactionClient = this.db,
+	): Promise<string> {
+		return readReportingCurrency(client);
 	}
 
 	async rateFor(currency: string): Promise<ResolvedRate | null> {
@@ -47,20 +49,22 @@ export class ConversionService {
 	async convert(
 		amount: PrismaTypes.Decimal | null,
 		currency: string,
+		client: PrismaTypes.TransactionClient = this.db,
 	): Promise<Conversion | null> {
 		return convertToBase(
-			this.db,
+			client,
 			amount,
 			currency,
-			await this.reportingCurrency(),
+			await this.reportingCurrency(client),
 		);
 	}
 
 	async dealFields(
 		amount: PrismaTypes.Decimal | null,
 		currency: string,
+		client: PrismaTypes.TransactionClient = this.db,
 	): Promise<DealFxFields> {
-		const converted = await this.convert(amount, currency);
+		const converted = await this.convert(amount, currency, client);
 
 		if (!converted) {
 			return {
