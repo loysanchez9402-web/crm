@@ -9,8 +9,8 @@ import {
 	conversationSaveInput,
 } from "./conversations.contracts";
 import {
-	ConversationsService,
 	type ConversationEvent,
+	ConversationsService,
 } from "./conversations.service";
 
 @Router({ alias: "conversations" })

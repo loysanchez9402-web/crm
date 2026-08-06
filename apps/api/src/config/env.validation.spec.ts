@@ -42,7 +42,9 @@ describe("APP_URL validation", () => {
 	});
 
 	it("rejects a value with no protocol", () => {
-		expect(() => validateEnv(baseConfig({ APP_URL: "localhost:3000" }))).toThrow();
+		expect(() =>
+			validateEnv(baseConfig({ APP_URL: "localhost:3000" })),
+		).toThrow();
 	});
 
 	it("rejects a non-http(s) protocol", () => {
