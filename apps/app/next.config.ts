@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
 		NEXT_PUBLIC_API_URL: apiUrl,
 	},
 
-	transpilePackages: ["@crm/auth", "@crm/db", "@crm/ui"],
+	transpilePackages: ["@crm/auth", "@crm/db", "@crm/telemetry", "@crm/ui"],
 
 	serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg"],
 
@@ -23,9 +23,8 @@ const nextConfig: NextConfig = {
 		],
 	},
 
-	experimental: {
-		viewTransition: true,
-	},
+	cacheComponents: true,
+	partialPrefetching: true,
 };
 
 export default nextConfig;

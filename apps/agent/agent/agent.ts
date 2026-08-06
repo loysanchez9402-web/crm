@@ -1,15 +1,16 @@
 import "@crm/env/load";
 
 import { DEFAULT_AGENT_MODEL } from "@crm/db/settings";
+import { onTelemetryProblem, syncVersion } from "@crm/telemetry";
 import { defineAgent, defineDynamic } from "eve";
-import { capabilities } from "./lib/capabilities";
+import { logCapabilities } from "./lib/capabilities";
 import { selectedModel } from "./lib/model";
 
-for (const capability of capabilities()) {
-	console.log(
-		`[agent] ${capability.enabled ? "on " : "off"}  ${capability.label} (${capability.env})`,
-	);
-}
+void logCapabilities();
+
+onTelemetryProblem((message) => console.debug(`[telemetry] ${message}`));
+
+void syncVersion();
 
 export default defineAgent({
 	model: defineDynamic({

@@ -11,6 +11,7 @@ import { validateEnv } from "./config/env.validation";
 import { ContactsModule } from "./contacts/contacts.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { CrmModule } from "./crm/crm.module";
+import { CurrencyModule } from "./currency/currency.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { DealsModule } from "./deals/deals.module";
@@ -21,6 +22,7 @@ import { logAuthRoute } from "./logging/request-logger.middleware";
 import { SearchModule } from "./search/search.module";
 import { SettingsModule } from "./settings/settings.module";
 import { SsoModule } from "./sso/sso.module";
+import { TelemetryModule } from "./telemetry/telemetry.module";
 import { TrpcModule } from "./trpc/trpc.module";
 import { UsersModule } from "./users/users.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
@@ -44,6 +46,7 @@ import { WorkspaceModule } from "./workspace/workspace.module";
 		CompaniesModule,
 		ContactsModule,
 		ConversationsModule,
+		CurrencyModule,
 		DealsModule,
 		ActivitiesModule,
 		DashboardModule,
@@ -53,6 +56,7 @@ import { WorkspaceModule } from "./workspace/workspace.module";
 		WorkspaceModule,
 		SsoModule,
 		BackfillModule,
+		TelemetryModule,
 	],
 })
 export class AppModule {}

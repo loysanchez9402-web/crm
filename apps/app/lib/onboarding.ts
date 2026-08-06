@@ -1,54 +1,69 @@
-import type { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { API_URL } from "@/lib/env";
 
 export const ONBOARDING_PATH = "/onboarding";
 
-export const ONBOARDING_COOKIE = "crm.onboarded";
-
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+export const RESEARCH_PATH = "/onboarding/research";
 
 const GATE_TIMEOUT_MS = 2_000;
 
-export type OnboardingGate = "settled" | "required" | "unknown";
+export type Gate = "settled" | "required" | "unknown";
 
-export async function readOnboardingGate(
+async function read<T>(
 	request: NextRequest,
-): Promise<OnboardingGate> {
+	procedure: string,
+): Promise<T | null> {
 	const cookie = request.headers.get("cookie");
 
-	if (!cookie) return "unknown";
+	if (!cookie) return null;
 
 	try {
-		const response = await fetch(`${API_URL}/api/trpc/workspace.get`, {
+		const response = await fetch(`${API_URL}/api/trpc/${procedure}`, {
 			headers: { cookie },
+			cache: "no-store",
 			signal: AbortSignal.timeout(GATE_TIMEOUT_MS),
 		});
 
-		if (!response.ok) return "unknown";
+		if (!response.ok) return null;
 
-		const body = (await response.json()) as {
-			result?: { data?: { onboarded?: boolean; canRename?: boolean } };
-		};
+		const body = (await response.json()) as { result?: { data?: T } };
 
-		const workspace = body.result?.data;
-
-		if (typeof workspace?.onboarded !== "boolean") return "unknown";
-
-		return workspace.onboarded || !workspace.canRename ? "settled" : "required";
+		return body.result?.data ?? null;
 	} catch {
-		return "unknown";
+		return null;
 	}
 }
 
-export function settleOnboarding(
+export type WorkspaceGate = { gate: Gate; slug: string | null };
+
+export async function readWorkspaceGate(
 	request: NextRequest,
-	response: NextResponse,
-): void {
-	response.cookies.set(ONBOARDING_COOKIE, "1", {
-		httpOnly: true,
-		sameSite: "lax",
-		secure: request.nextUrl.protocol === "https:",
-		path: "/",
-		maxAge: COOKIE_MAX_AGE,
-	});
+): Promise<WorkspaceGate> {
+	const workspace = await read<{
+		onboarded?: boolean;
+		canRename?: boolean;
+		slug?: string;
+	}>(request, "workspace.get");
+
+	const slug = workspace?.slug ? workspace.slug : null;
+
+	if (typeof workspace?.onboarded !== "boolean") {
+		return { gate: "unknown", slug };
+	}
+
+	return {
+		gate: workspace.onboarded || !workspace.canRename ? "settled" : "required",
+		slug,
+	};
+}
+
+export async function readResearchGate(request: NextRequest): Promise<Gate> {
+	const key = await read<{ configured?: boolean }>(
+		request,
+		"settings.researchKey",
+	);
+
+	if (typeof key?.configured !== "boolean") return "unknown";
+
+	return key.configured ? "settled" : "required";
 }

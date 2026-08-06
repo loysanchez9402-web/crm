@@ -3,6 +3,7 @@ export { AUTH_COOKIE_PREFIX } from "./cookies";
 export { isGoogleConfigured } from "./env";
 export {
 	canChangeRole,
+	canManageCurrency,
 	canRenameWorkspace,
 	DEFAULT_WORKSPACE_NAME,
 	ensureWorkspaceMembership,
@@ -10,7 +11,6 @@ export {
 	isWorkspaceRole,
 	WORKSPACE_ID,
 	WORKSPACE_ROLES,
-	WORKSPACE_SLUG,
 	type WorkspaceRole,
 } from "./organization";
 export {

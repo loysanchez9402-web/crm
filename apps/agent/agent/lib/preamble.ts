@@ -30,8 +30,12 @@ export async function sessionPreamble(
 	return noRecordPreamble();
 }
 
-export function composeClosing(us: WorkspaceIdentity | null): string {
-	return [usMarkdown(us), capabilitiesMarkdown()].filter(Boolean).join("\n\n");
+export async function composeClosing(
+	us: WorkspaceIdentity | null,
+): Promise<string> {
+	return [usMarkdown(us), await capabilitiesMarkdown()]
+		.filter(Boolean)
+		.join("\n\n");
 }
 
 async function closing(): Promise<string> {
@@ -226,6 +230,7 @@ export async function dealPreamble(
 		where: { id: dealId },
 		select: {
 			name: true,
+			description: true,
 			stage: true,
 			amount: true,
 			currency: true,
@@ -276,6 +281,9 @@ export async function dealPreamble(
 		deal.lastActivityAt
 			? `Last touched ${deal.lastActivityAt.toDateString()}.`
 			: "Nothing has happened on it yet.",
+		...(deal.description
+			? [`The rep's own description of it: "${deal.description}"`]
+			: []),
 		people ? `People on it: ${people}` : "Nobody is attached to it yet.",
 		"",
 		opening(
@@ -351,7 +359,7 @@ export async function workspacePreamble(
 		"You are describing us to a colleague who has just joined, not writing our",
 		"home page back to us.",
 		"",
-		capabilitiesMarkdown(),
+		await capabilitiesMarkdown(),
 	].join("\n");
 
 	return { markdown, focus: {} };
