@@ -39,7 +39,15 @@ import { WorkspaceModule } from "./workspace/workspace.module";
 		AppCacheModule,
 		DatabaseModule,
 		CrmModule,
-		BetterAuthModule.forRoot({ auth, middleware: logAuthRoute }),
+		BetterAuthModule.forRoot({
+			auth,
+			middleware: logAuthRoute,
+			// create-app.ts calls app.enableCors() itself, ahead of
+			// publicLeadsCors on the Express stack, with the same origin/
+			// credentials config this would otherwise set up -- see the
+			// comment there.
+			disableTrustedOriginsCors: true,
+		}),
 		AuthModule,
 		HealthModule,
 		PublicModule,
