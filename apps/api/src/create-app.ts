@@ -8,6 +8,15 @@ import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { ContextLogger } from "./logging/context-logger";
 
+export function createValidationPipe(): ValidationPipe {
+	return new ValidationPipe({
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true,
+		transformOptions: { enableImplicitConversion: true },
+	});
+}
+
 export async function createApp(): Promise<NestExpressApplication> {
 	const app = await NestFactory.create<NestExpressApplication>(
 		AppModule,
@@ -16,14 +25,7 @@ export async function createApp(): Promise<NestExpressApplication> {
 	);
 
 	app.use(helmet());
-	app.useGlobalPipes(
-		new ValidationPipe({
-			whitelist: true,
-			forbidNonWhitelisted: true,
-			transform: true,
-			transformOptions: { enableImplicitConversion: true },
-		}),
-	);
+	app.useGlobalPipes(createValidationPipe());
 
 	return app;
 }

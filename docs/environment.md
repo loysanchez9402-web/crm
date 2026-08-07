@@ -18,8 +18,8 @@ and nothing that is not read. `packages/env` walks up to the workspace root and 
 
 ## Required
 
-`DATABASE_URL`, `BETTER_AUTH_SECRET`, `ALLOWED_SIGN_IN`. Everything else has a
-localhost default or is genuinely optional.
+`DATABASE_URL`, `BETTER_AUTH_SECRET`, `ALLOWED_SIGN_IN`, `WEBSITE_LEAD_OWNER_ID`.
+Everything else has a localhost default or is genuinely optional.
 
 **`GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`** are the sign-in button *and* the
 Gmail/Calendar sync — optional, so an SSO-only install needn't create a Google project,
@@ -30,6 +30,9 @@ addresses exist for a solo self-hoster, where `gmail.com` would be an open door)
 list, read by the sign-in guard *and* the sync's "which side is external" decision** —
 if they drifted a colleague would be refused at the door or filed as a lead. **An empty
 list fails closed.** Parsed on demand. `packages/auth/src/workspace.ts`.
+
+**`WEBSITE_LEAD_OWNER_ID`** — the `User.id` that public website leads
+(`POST /public/leads` consultation requests) are attributed to as owner/author.
 
 ## Where things are
 

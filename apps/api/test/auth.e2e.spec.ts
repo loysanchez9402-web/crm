@@ -16,6 +16,7 @@ fallback(
 fallback("BETTER_AUTH_SECRET", "test-secret-at-least-32-characters-long");
 fallback("API_URL", "http://localhost:3001");
 fallback("ALLOWED_SIGN_IN", "example.com");
+fallback("WEBSITE_LEAD_OWNER_ID", "usr-jvaf9ztwmi");
 fallback("GOOGLE_CLIENT_ID", "test-google-client-id");
 fallback("GOOGLE_CLIENT_SECRET", "test-google-client-secret");
 
@@ -24,12 +25,14 @@ describe("Auth (e2e)", () => {
 
 	beforeAll(async () => {
 		const { AppModule } = await import("../src/app.module");
+		const { createValidationPipe } = await import("../src/create-app");
 
 		const moduleFixture: TestingModule = await Test.createTestingModule({
 			imports: [AppModule],
 		}).compile();
 
 		app = moduleFixture.createNestApplication({ bodyParser: false });
+		app.useGlobalPipes(createValidationPipe());
 		await app.init();
 	});
 
